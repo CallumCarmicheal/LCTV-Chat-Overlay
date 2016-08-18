@@ -1,0 +1,11 @@
+{
+  "name": "LCTV-Chat-Overlay",
+  "version": "0.1.0",
+  "description": "",
+  "dependencies": {
+    "express": "4.10.2",
+    "socket.io": "1.2.0",
+    "simple-xmpp": "1.3.0",
+	"console-stamp": "0.2.2"
+  }
+}
