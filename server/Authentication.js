@@ -1,17 +1,22 @@
 // Stores every module that is loaded
 // Allows cross module talk!
 var modules;
+var fs;
 
 // Options
-    var XMPPServer = {
-        Address:    "",
-        Port:       0
-    }
+var XMPPServer = {
+    Address:    "",
+    Port: 0,
+}
 
-    var XMPPCreditentials = {
-        Username: "User",
-        Password: "Password"
-    }
+var XMPPCreditentials = {
+    Username:   "User",
+    Password:   "Password",
+
+    ReadFile:   true,
+    fUsername:  "Z:/SuperSecretUserCreditentials.txt",
+    fPassword:  "Z:/SuperSecretPasswodardo.txt",
+}
 
 
 // Handles cross module commands
@@ -36,9 +41,17 @@ module.exports = {
         SendCommand: recieveModuleCommand
     },
 
-    InitModule: function() { },
+    InitModule: function () { 
+        if (XMPPCreditentials.ReadFile) {
+            XMPPCreditentials.Username = fs.readFileSync(XMPPCreditentials.fUsername).toString();
+            XMPPCreditentials.Password = fs.readFileSync(XMPPCreditentials.fPassword).toString();
+        }
 
-    SetBinds: function(bindObject) {
+        console.log("");
+    },
+
+    SetBinds: function (bindObject) {
+        fs      = bindObject.Libs.FileSystem;
         modules = bindObject;
     }
 };

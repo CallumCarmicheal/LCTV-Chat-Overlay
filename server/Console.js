@@ -2,33 +2,106 @@
 // Allows cross module talk!
 var modules;
 
+// Prototypes
+var startsWith = function (text, str) {
+    return !text.indexOf(str);
+}
+
+
+
 var consoleCommands = [
-    {
-        name:   'echo',
+    {   name:   ['echo'],
 
         // Called with parameters
-        // eg. globalMessage(hell"o, "world")
-        pHandler: function(self, args) {
-            console.log(args);
+        // eg. globalMessage(hello, world) (NO QUOTES NEEDED)
+        pHandler: function (self, args) {
+            if (args.length == 1) console.log(args[0]);
+            else                  console.log(args);
         },
 
         // Called without parameters
         // eg. globalMessage
         cHandler: function(self) {
-            console.log("This command requires parameters!");
+            console.log("\n");
         }
     }, {
-        name:   'exit',
-        pHandler: function(self, args)  { process.exit(); },
-        cHandler: function(self)        { process.exit(); }
-    }
+        name: ['exit'],
+        pHandler: function (self, args) { console.log("exit"); process.exit(1); },
+        cHandler: function (self)       { console.log("exit"); process.exit(1); }
+    }, {
+        name: ['cls', 'clear'], 
+        pHandler: function (self, args) { process.stdout.write("\u001b[2J\u001b[0;0H"); },
+        cHandler: function (self)       { process.stdout.write("\u001b[2J\u001b[0;0H"); }
+    },
 
     // TODO: Make a command to call other modules
 ];
 
+// Handles module calls
+// example: mod.XMPPChat.sendMessage(args)
+function processModuleCommand(cmdStr) {
+    var str = "" + cmdStr;
+    cmdStr = str.replace("mod.", "");
+
+    var moduleName  = "",
+        command     = cmdStr.toString().trim(),
+        cmdName     = "",
+        args        = [],
+        useParams   = (command.indexOf('(') !== -1);
+    
+    // Split via '.'
+    // [0] Module
+    // [1] Rest of command
+    var targs   = command.split('.');
+    moduleName  = targs[0];
+    command     = targs[1];
+
+    // Arguments
+    if (useParams) {
+        // Create our command arguments
+        var argsEnd = command.indexOf(")") !== -1 ? command.indexOf(')') : command.length;
+        args = command.substring(command.indexOf('(') + 1, argsEnd);
+        args = args.split(",");
+        
+        for (var x = 0; x < args.length; x++)
+            args[x] = args[x].trim();
+
+        // Used when calling a function with params
+        // Eg...
+        cmdName = command.substring(0, command.indexOf('('));
+    } 
+    
+    // No Arguments
+    else {
+        cmdName = command;
+    }
+
+    // Check if command exists
+    var found  = false;
+    var keys   = Object.keys(modules.Modules);
+    var object = "";
+    for (var x = 0; x < keys.length; x++) {
+        var key    = keys[x];
+            object = modules.Modules[key].Module;
+
+        if (object.Handle.indexOf(cmdName) > -1) {
+            found = true;
+            break;
+        }
+    }
+
+    if (found) {
+        // Call the function
+        object.SendCommand(cmdName, args);
+    } else {
+        console.log("Module does not exist");
+    }
+}
 
 // Handles STDIN from the console
 function processConsoleCommand(cmdStr) {
+    if (startsWith(cmdStr, "mod.")) return processModuleCommand(cmdStr);
+
     var cmdName     = "",
         command     = cmdStr.toString().trim(),
         args        = "",
@@ -55,22 +128,28 @@ function processConsoleCommand(cmdStr) {
     }
 
     cmdName = cmdName.toLowerCase();
+    
+    
 
     // Check if command exists
-    var commandIndex = 0;
-    while(consoleCommands[commandIndex].name != cmdName) {
-        commandIndex ++;
+    var x   = 0;
+    var object  = consoleCommands[0];
+    
+    while (object.name.indexOf(cmdName) == -1) {
+        x++;
 
-        if(commandIndex == consoleCommands.length) {
-            console.log("Console Command not found");
+        if (x >= consoleCommands.length) {
+            console.log("Command does not exist");
             return;
         }
+
+        object = consoleCommands[x];
     }
 
     if(useParams)
          // Call the pHandler method
-         consoleCommands[commandIndex].pHandler(consoleCommands, args);
-    else consoleCommands[commandIndex].cHandler(consoleCommands);
+         consoleCommands[x].pHandler(consoleCommands, args);
+    else consoleCommands[x].cHandler(consoleCommands);
 }
 
 // Handles cross module commands
@@ -127,8 +206,9 @@ function recieveModuleCommand(Name, Args) {
 module.exports = {
 
     Module: {
-        Name: "server/Console.js",
-        Desc: "Handles console input",
+        Name:   "server/Console.js",
+        Handle: "Console",
+        Desc:   "Handles console input",
         SendCommand: recieveModuleCommand
     },
 

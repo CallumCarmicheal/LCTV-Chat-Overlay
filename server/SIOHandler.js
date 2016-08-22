@@ -76,8 +76,9 @@ function recieveModuleCommand(Name, Args) {
 module.exports = {
 
     Module: {
-        Name: "server/SIOHandler.js",
-        Desc: "Handles stealing bank details and hacking super computers!",
+        Name:   "server/SIOHandler.js",
+        Handle: "SocketIO",
+        Desc:   "Handles stealing bank details and hacking super computers!",
         SendCommand: recieveModuleCommand
     },
 

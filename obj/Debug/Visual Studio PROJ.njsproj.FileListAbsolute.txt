@@ -1,0 +1,4 @@
+G:\GitHub\LCTV Chat Overlay\LCTV-Chat-Overlay\obj\Debug\Visual Studio PROJ.njsprojResolveAssemblyReference.cache
+G:\GitHub\LCTV Chat Overlay\LCTV-Chat-Overlay\bin\Microsoft.NodejsTools.WebRole.dll
+G:\lto\obj\Debug\Visual Studio PROJ.njsprojResolveAssemblyReference.cache
+G:\lto\bin\Microsoft.NodejsTools.WebRole.dll

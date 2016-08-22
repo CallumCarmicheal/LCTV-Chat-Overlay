@@ -3,20 +3,25 @@ var app                 = require('express')();
 var http                = require('http').Server(app);
 var io                  = require('socket.io')(http);
 var express             = require("express");
-var express_morgan      = require('morgan');
-var xmpp                = require('simple-xmpp');
-var constamp            = require('console-stamp')(console, '[HH:MM:ss.l]');
-
+var xmpp                = require('node-xmpp-client');
+var constamp            = require('console-stamp')(console, 'HH:MM:ss.l');
+var fs                  = require('fs');
 
 // Setup our Modules
 var modConsole          = require("./Console.js");
-var modAuthentication   = require("./Authentication.js");
+var modConfig           = require("./Config.js");
 var modXMPP             = require("./XMPPChat.js");
 var modSIOHandler       = require("./SIOHandler.js");
 
 // Other Variables
-var debug               = true;
+var debug               = false;
 
+// Prototypes
+if(!String.prototype.startsWith){
+    String.prototype.startsWith = function (str) {
+        return !this.indexOf(str);
+    }
+}
 
 function sendRebinds(callInit) {
     // Send rebind call to each module
@@ -25,9 +30,9 @@ function sendRebinds(callInit) {
         HTTP:           http,
         SocketIO:       io,
         Express:        express,
-        Express_Morgan: express_morgan,
         XMPP:           xmpp,
         ConsoleStampt:  constamp,
+        FileSystem:     fs,
     };
 
     // Load modules in requirement order
@@ -35,18 +40,18 @@ function sendRebinds(callInit) {
         // 0.
             Console:        modConsole,
         // 1.
-            Authentication: modAuthentication,
+            Config:         modConfig,
         // 2.
-            //XMPP:           modXMPP,
+            XMPP:           modXMPP,
         // 3.
             SIOHandler:     modSIOHandler
         // 4.
-    }
-
+    };
+    
     var binds = {
         Libs:    libs,
         Modules: modules
-    }
+    };
 
     // HACK: Loop through modules and send the binds that way!
 
@@ -55,21 +60,26 @@ function sendRebinds(callInit) {
         var key = Object.keys(modules)[x];
 
         modules[key].SetBinds(binds);
-        if(callInit) modules[key].InitModule();
+        if (debug) console.log("[Server.js] Modules (" + modules[key].Module.Name + "): Set binds");
 
-        console.log("[Modules]: Loaded - " + modules[key].Module.Name + " (" + modules[key].Module.Desc + ")");
+        if (callInit) {
+            modules[key].InitModule();
+            if (debug) console.log("[Server.js] Modules (" + modules[key].Module.Name + "): Called init");
+        }
+
+        console.log("[Server.js] Modules: Loaded - " + modules[key].Module.Name + " (" + modules[key].Module.Desc + ")");
     }
-};
+}
 
 // Setup our http directory
 app.use('/', express.static('../public'));
 http.listen(8080, function() {
-    console.log("[HTTP] Listening to http requests on *:8080");
+    console.log("[Server.js] HTTP: Listening to http requests on *:8080");
 });
 
 // TODO: Setup express logging
-
+// TODO: Error handling
 
 
 sendRebinds(true);
-console.log("[Server.js] Finished bootstrap process");
+console.log("[Server.js] Init: Finished bootstrap process");
