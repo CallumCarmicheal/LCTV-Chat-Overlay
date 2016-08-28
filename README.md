@@ -3,6 +3,6 @@ A web overlay that can be used as a Livestream window source with a chroma key t
 
 # Status
 In Development
-Not useable yet!
+Kinda usable at the moment:
 
-If you want to help out fork... you know the deal :)
+NOTE: THERE IS NO GUI FOR THE CLIENT AS OF YET, i am trying to find a system like Toastr that can queue/buffer chat messages for 5 seconds and stop the counter for ones hidden/shown offscreen!
