@@ -3,14 +3,13 @@ var app                 = require('express')();
 var http                = require('http').Server(app);
 var io                  = require('socket.io')(http);
 var express             = require("express");
-var xmpp                = require('node-xmpp-client');
+var lctvbot             = require('lctvbot');
 var constamp            = require('console-stamp')(console, 'HH:MM:ss.l');
 var fs                  = require('fs');
 
 // Setup our Modules
 var modConsole          = require("./Console.js");
-var modConfig           = require("./Config.js");
-var modXMPP             = require("./XMPPChat.js");
+var modLCTV             = require("./LCTV.js");
 var modSIOHandler       = require("./SIOHandler.js");
 
 // Other Variables
@@ -30,7 +29,7 @@ function sendRebinds(callInit) {
         HTTP:           http,
         SocketIO:       io,
         Express:        express,
-        XMPP:           xmpp,
+        LCTV:           lctvbot,
         ConsoleStampt:  constamp,
         FileSystem:     fs,
     };
@@ -39,13 +38,10 @@ function sendRebinds(callInit) {
     var modules = {
         // 0.
             Console:        modConsole,
-        // 1.
-            Config:         modConfig,
         // 2.
-            XMPP:           modXMPP,
+            LCTV:           modLCTV,
         // 3.
             SIOHandler:     modSIOHandler
-        // 4.
     };
     
     var binds = {
@@ -54,7 +50,6 @@ function sendRebinds(callInit) {
     };
 
     // HACK: Loop through modules and send the binds that way!
-
     // Check if command exists
     for(var x = 0; x < Object.keys(modules).length; x++) {
         var key = Object.keys(modules)[x];

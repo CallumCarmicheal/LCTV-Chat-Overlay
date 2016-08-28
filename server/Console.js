@@ -7,8 +7,6 @@ var startsWith = function (text, str) {
     return !text.indexOf(str);
 }
 
-
-
 var consoleCommands = [
     {   name:   ['echo'],
 
@@ -55,6 +53,8 @@ function processModuleCommand(cmdStr) {
     var targs   = command.split('.');
     moduleName  = targs[0];
     command     = targs[1];
+    
+    if (command == null) return;
 
     // Arguments
     if (useParams) {
@@ -69,12 +69,18 @@ function processModuleCommand(cmdStr) {
         // Used when calling a function with params
         // Eg...
         cmdName = command.substring(0, command.indexOf('('));
+
+        if (cmdName.indexOf(')') >= 0)
+            cmdName = cmdName.substring(0, cmdName.indexOf(')'));
     } 
     
     // No Arguments
     else {
         cmdName = command;
     }
+    
+    // To Lower
+    cmdName = cmdName.toLowerCase();
 
     // Check if command exists
     var found  = false;
@@ -84,23 +90,30 @@ function processModuleCommand(cmdStr) {
         var key    = keys[x];
             object = modules.Modules[key].Module;
 
-        if (object.Handle.indexOf(cmdName) > -1) {
+        if (object.Handle.indexOf(moduleName) > -1) {
             found = true;
             break;
         }
     }
-
+    
+    useParams = useParams ? true: args != null;
+    
+    console.log("moduleName, command, cmdName, args, useParams, found");
+    console.log(moduleName, " || ", command, " || ", cmdName, " || ", args, " || ", useParams, " || ", found);
     if (found) {
-        // Call the function
-        object.SendCommand(cmdName, args);
+        if (useParams)
+             // Call the function
+             object.SendCommand(cmdName, args);
+        else object.SendCommand(cmdName, null);
     } else {
-        console.log("Module does not exist");
+        console.log("Module: " + moduleName + " - does not exist");
     }
 }
 
 // Handles STDIN from the console
 function processConsoleCommand(cmdStr) {
-    if (startsWith(cmdStr, "mod.")) return processModuleCommand(cmdStr);
+    if (startsWith(cmdStr, "mod.")) 
+        return processModuleCommand(cmdStr);
 
     var cmdName     = "",
         command     = cmdStr.toString().trim(),
@@ -120,16 +133,17 @@ function processConsoleCommand(cmdStr) {
         // Used when calling a function with params
         // Eg...
         cmdName = command.substring(0, command.indexOf('('));
+        if(cmdName.indexOf(')') >= 0)
+            cmdName = cmdName.substring(0, cmdName.indexOf(')'));
     } else {
         // This is when there are no braces
         // eg Just a simple call like
         // restart or exit etc.
         cmdName = command;
     }
-
+    
+    if (cmdName == null) return;
     cmdName = cmdName.toLowerCase();
-    
-    
 
     // Check if command exists
     var x   = 0;
@@ -139,7 +153,7 @@ function processConsoleCommand(cmdStr) {
         x++;
 
         if (x >= consoleCommands.length) {
-            console.log("Command does not exist");
+            console.log("[Console.js] Input: Command (%s) does not exist", cmdName);
             return;
         }
 
@@ -157,7 +171,9 @@ function processConsoleCommand(cmdStr) {
 function recieveModuleCommand(Name, Args) {
     var useArgs = (Args != null);
     var name = Name.toLowerCase();
-
+    
+    console.log(Name, Args, useArgs, name);
+    
     if(useArgs)
         for(var x = 0; x < Args.length; x++)
             Args[x] = Args[x].trim();
@@ -179,6 +195,7 @@ function recieveModuleCommand(Name, Args) {
             } else {
                 processConsoleCommand(Args[0])
             }
+
             //var aArgs = Args[0] Args.slice();
         }
     } else if(Name == "echo" || Name == "print") {
@@ -187,13 +204,13 @@ function recieveModuleCommand(Name, Args) {
                 var name = "echo";
                 var larg = Args;
                 var oArgs = "";
-                for(var x = 0; x < args.length; x++)
+                
+                for(var x = 0; x < larg.length; x++)
                     oArgs += larg[x] + ",";
 
                 // Remove trailing ","
                 oArgs = oArgs.slice(0, oArgs.length -1);
-
-                oArgs = name + oArgs + ")";
+                oArgs = name + "(" + oArgs + ")";
                 processConsoleCommand(oArgs);
             } else {
                 processConsoleCommand(Args[0])

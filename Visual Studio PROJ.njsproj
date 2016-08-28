@@ -17,14 +17,14 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
   <ItemGroup>
+    <Compile Include="server\LCTV.js" />
+    <Compile Include="server\XMPPChat_Old.js" />
     <Content Include="package.json" />
     <Content Include="README.md" />
     <Content Include="public\index.html" />
-    <Compile Include="server\Config.js" />
     <Compile Include="server\Console.js" />
     <Compile Include="server\Server.js" />
     <Compile Include="server\SIOHandler.js" />
-    <Compile Include="server\XMPPChat.js" />
     <Content Include="public\js\handlerSocketIO.js" />
   </ItemGroup>
   <ItemGroup>
