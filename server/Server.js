@@ -15,13 +15,6 @@ var modSIOHandler       = require("./SIOHandler.js");
 // Other Variables
 var debug               = false;
 
-// Prototypes
-if(!String.prototype.startsWith){
-    String.prototype.startsWith = function (str) {
-        return !this.indexOf(str);
-    }
-}
-
 function sendRebinds(callInit) {
     // Send rebind call to each module
     var libs = {

@@ -18,7 +18,6 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
   <ItemGroup>
     <Compile Include="server\LCTV.js" />
-    <Compile Include="server\XMPPChat_Old.js" />
     <Content Include="package.json" />
     <Content Include="README.md" />
     <Content Include="public\index.html" />

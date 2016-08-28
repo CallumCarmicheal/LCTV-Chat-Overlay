@@ -34,7 +34,7 @@ function strContains(haystack, needle) {
 /////////////////////////////////////////////////
 //      SECTION: Handler for LCTV Bot evts
 var handlerSIO = {
-    onChannelJoin: function (self, channel, user) {
+    onChannelJoin: function (self, channel, user, stanza) {
         // TODO: Send module message to SIOHandler.js
         var data =  {
             channel: channel,
@@ -44,7 +44,7 @@ var handlerSIO = {
         io.in(channel).emit('channel join', data);
     },
     
-    onChannelPart: function (self, channel, user) {
+    onChannelPart: function (self, channel, user, stanza) {
         // TODO: Send module message to SIOHandler.js
         var data = {
             channel: channel,
@@ -54,7 +54,7 @@ var handlerSIO = {
         io.in(channel).emit('channel part', data);
     },
     
-    onChannelMessage: function (self, channel, user, message) {
+    onChannelMessage: function (self, channel, user, message, stanza) {
         var isPingMsg = (
             DEBUG_MODE &&
                 message.toLowerCase() == "ping"         || 
@@ -103,18 +103,18 @@ var handlerLCTV = {
     
     //////////////////////////////////////////////////////////////////
     evtChannelJoin: function (channel, nickname, stanza) {
-        handlerSIO.onChannelJoin(handlerSIO, channel, nickname);
+        handlerSIO.onChannelJoin(handlerSIO, channel, nickname, stanza);
         console.log("[LCTV.js] (%s): %s joined.", channel, nickname);
     },
 
     evtChannelPart: function (channel, nickname, stanza) {
-        handlerSIO.onChannelPart(handlerSIO, channel, nickname);
+        handlerSIO.onChannelPart(handlerSIO, channel, nickname, stanza);
         console.log("[LCTV.js] (%s): %s left.", channel, nickname)
     },
     //////////////////////////////////////////////////////////////////
 
-    evtMessage: function (nickname, channel, message, stazna) {
-        handlerSIO.onChannelMessage(handlerSIO, channel, nickname, message);
+    evtMessage: function (nickname, channel, message, stanza) {
+        handlerSIO.onChannelMessage(handlerSIO, channel, nickname, message, stanza);
         console.log("[LCTV.js] (%s): [%s: %s]", channel, nickname, message);
     }
 };
@@ -223,7 +223,7 @@ module.exports = {
 
     InitModule: onModuleInit,
     SetBinds: function (bindObject) {
-        auth  = "../../config.json";
+        auth  = "../../../config.json";
         lctv  = bindObject.Libs.LCTV;
         res   = bindObject;
         chnls = ['callumc']; // By default stalk me!

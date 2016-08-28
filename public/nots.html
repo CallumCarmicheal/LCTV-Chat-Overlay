@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Playground</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<link rel="stylesheet" href="css/jquery-ui.min.css"/>
+        <link rel="stylesheet" href="css/Lobibox.min.css"/>
+		<link rel="stylesheet" href="css/notificationCust.css"/>
+    </head>
+    <body>
+		<!-- Template used for each message element! --> 
+		<div id="notificationTemplate" class="lobibox-notify lobibox-notify-info animated-fast" style="-webkit-animation-name: fadeInUp;animation-name: fadeInUp; display:none;">
+			<div class="lobibox-notify-body">
+				<div elemID="body_Title" class="lobibox-notify-title"> Information </div>
+				<div elemID="body_Msg" class="lobibox-notify-msg" style="max-height: 60px;"> A BUNCH OF RANDOM WORDS, BECAUSE Y NAWT? </div>
+			</div>
+			<div class="lobibox-delay-indicator">
+				<div elemID="footer_PB" style="width: 100%;"></div>
+			</div>
+		</div>
+		
+		<!-- Place javascript at the bottom of the body tags to make the page display faster (HTML NOT JS)--> 
+		<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+		<script src="https://code.jquery.com/ui/1.12.0/jquery-ui.min.js"></script>
+		<script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+		<script src="http://opensource.teamdf.com/visible/jquery.visible.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.19.0/TweenMax.min.js"></script>
+			
+			
+		<script>
+			function guid() {
+			  function s4() {
+				return Math.floor((1 + Math.random()) * 0x10000)
+				  .toString(16)
+				  .substring(1);
+			  }
+			  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+					 s4() + '-' + s4() + s4() + s4();
+			}
+		</script>
+		
+		<script>
+			// Some shade of yellow!
+			var eventColor = "";
+		
+			// Example 
+			// [
+			//   0: "GUID"
+			//   1: "43gregwggsdweewfwwef"
+			//   2: "erhgegefgdefd"
+			// ]
+			// Stores the order of each notifaction via GUID
+			var orderNots = [];
+			
+			// Example 
+			// {
+			//  "GUID": object
+			// }
+			// Stores each object by the guid
+			var notificationList = {};
+			
+			
+			// Example
+			// {
+			//	  "callumc": 	"blue",
+			//	  "": 			"",
+			//    "": 			""
+			// } 
+			// Stores the user's colors so they can be displayed in the same
+			// color the next time the user messages!
+			// NOTE: The color cant be Yellow because yellow is a event color!
+			var colorListing = {};
+		</script>
+		
+		<script>
+			/////// MESSAGE OBJECT PROTOTYPE \\\\\\\\\\
+			function msgObject() { 
+				// Generate global guid to delete the object once its finished!
+				// Also used when adding a new chat item!
+				this.GUID = guid(); 
+				
+				this.Settings = {
+					ProgressBar: {
+						Display: 	true,		// Displays the progressbar, the message will autohide after (Step >= Timer)
+						Timer: 		100.00,		
+						Step: 		0.32,		// How much is the timer decremented by each step
+						Timeout:	100			// setTimeout ms response.
+					},
+					
+					Username: 	"",
+					Message:	"",
+					
+					Color: 		""
+				};
+				
+				this.Elements = {
+					Parent: 	null, 	// Main element
+					Title: 		null,	// The title element (Username)
+					Message: 	null,	// The message element
+					Progress: 	null	// The progress element
+				};
+			}
+			
+			msgObject.prototype.FadeOut = function(callback) {
+				var obj = this.Elements.Parent;
+				console.log(obj);
+				
+				var mcb = function() {
+					console.log("Animated!");
+					obj.hide();
+					callback();
+				}
+			
+				// TODO: Check if callback is a function
+				// TODO: FADE OUT ELEMENT
+				obj.animate({
+				  'marginLeft': '100%',
+				  'opacity': 0
+				}, 0, 'easeInExpo', mcb);
+			};
+			
+			msgObject.prototype.Delete = function() {
+				var that = this;
+				
+				// Call back
+				function afterFadeOut() {
+					// Delete the elements associated with this object
+					if(that.Elements != null) {
+						if(that.Elements.Parent != null) 	$(that.Elements.Parent).remove();
+						if(that.Elements.Title != null) 	$(that.Elements.Title).remove();
+						if(that.Elements.Message != null) 	$(that.Elements.Message).remove();
+						if(that.Elements.Progress != null) 	$(that.Elements.Progress).remove();
+						
+						that.Elements.Parent 		= null;
+						that.Elements.Title			= null; 
+						that.Elements.Message		= null;
+						that.Elements.Progress		= null;
+						
+						console.log("Nulled and Deleted html elements for Message (%s)!", that.GUID);
+					}
+					
+					// Check if the notList contains the current guid
+					// if not just leave the object in memory because it cant 
+					// be located, the object will need to be explicitly deleted!
+					if (notificationList[that.GUID] != null) 
+						delete notificationList[that.GUID];
+				}
+			
+				// Fade out element
+				// then delete the element with this object.
+				this.FadeOut(afterFadeOut);
+			};
+			
+			/* Events */ {
+				msgObject.prototype.Events = {};
+				msgObject.prototype.Events.CheckVisibility = function() {
+					// Check if the object is not visible or is touching the edge then 
+					// fade out the object and delete it.
+					
+					var visParent = $(this.Elements.Parent).visible(true);
+					if(!visParent) this.Delete();
+				}
+				
+				msgObject.prototype.Events.ProgressBarTick = function() {
+					this.Events.CheckVisibility(); 
+				};
+				
+				msgObject.prototype.Events.ObjectAdded = function() {
+					this.Events.CheckVisibility(); 
+				};
+			}
+			
+			msgObject.prototype.Create = function() {
+				var obj = this;
+			
+				console.log("Creating html elems for MSG OBJECT (%s)", this.GUID);
+				
+				// Creates the HTML Objects
+				// Copy the html of id="notificationTemplate"
+				var pelm = $('#notificationTemplate');
+				var html = pelm.html();
+				var elem = $(document.createElement('div'));
+				
+				elem.html(html);
+				elem.attr("class", pelm.attr("class")); // Add classes and styling
+				elem.attr("style", pelm.attr("style").replace("display:none;", "")); // Add classes and styling
+				
+				$('body').append(elem);
+				
+				this.Elements.Parent = elem;
+				elem.find("div[elemID]").each(function () {
+					var attr = $(this).attr("elemID");
+					
+					if(attr == "body_Title") 		obj.Elements.Title    = $(this);
+					else if (attr == "body_Msg") 	obj.Elements.Message  = $(this);
+					else if (attr == "footer_PB") 	obj.Elements.Progress = $(this);
+				});
+				
+				// Set the text
+				this.Elements.Title.html(this.Settings.Username);
+				this.Elements.Message.html(this.Settings.Message);
+			}
+			
+			msgObject.prototype.GetHeight = function() {
+				if(this.Elements.Parent == null) return -1;
+				return $(this.Elements.Parent).height();
+			}
+		</script>
+		
+		<script>	
+			//////////////// HANDLING THE MESSAGE EVENTS \\\\\\\\\\\\\\\\\\\	
+			
+			// TODO: Add differential colors
+			function addNotification(obj) {
+				// TODO: TRACK ELEM ETC
+				obj.Create();
+			}
+			
+			$(function() {
+				
+				for(var x = 0; x > 30; x++) {
+					var obj = new msgObject();
+					
+					obj.Settings.Username = "User-" + x;
+					obj.Settings.Message  = "Hello World!";
+					obj.Settings.ProgressBar.Display = true;
+					
+					addNotification(obj);
+				}
+				
+			});
+			
+		</script>
+	
+	</body>
+</html>
