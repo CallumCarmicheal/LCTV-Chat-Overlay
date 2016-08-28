@@ -1,11 +1,18 @@
 {
   "name": "LCTV-Chat-Overlay",
   "version": "0.1.0",
-  "description": "",
+  "description": "A web overlay that can be used as a Livestream window source with a chroma key to have a chat overlay when users are talking in the channel.",
+  
+  
+  "url": "https://github.com/CallumCarmicheal/LCTV-Chat-Overlay",
+  "main": "server/Server.js",
+  
+  "repository": "GitHub:CallumCarmicheal/LCTV-Chat-Overlay",
+  
   "dependencies": {
-    "express": "4.10.2",
-    "socket.io": "1.2.0",
-    "simple-xmpp": "1.3.0",
-	"console-stamp": "0.2.2"
+    "console-stamp": "*",
+    "express": "*",
+    "lctvbot": "*",
+    "socket.io": "*"
   }
 }
